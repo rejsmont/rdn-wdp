@@ -1,5 +1,7 @@
 package eu.hassanlab.rdnwdp;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ij.ImagePlus;
 import io.scif.Format;
 import io.scif.Metadata;
@@ -7,6 +9,7 @@ import io.scif.services.DatasetIOService;
 import io.scif.services.FormatService;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
+import net.imagej.ImageJ;
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.ops.OpService;
@@ -21,6 +24,7 @@ import org.scijava.command.Command;
 import org.scijava.convert.ConvertService;
 import org.scijava.log.LogLevel;
 import org.scijava.log.LogService;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import sc.fiji.hdf5.HDF5ImageJ;
 import org.yaml.snakeyaml.DumperOptions;
@@ -33,21 +37,18 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 
 @Plugin(type = Command.class, menuPath = "Plugins>PreProcessing")
-class PreProcessing implements Command {
+public class PreProcessing implements Command {
 
     @Parameter
     private DatasetIOService ioService;
@@ -74,30 +75,23 @@ class PreProcessing implements Command {
     private File outputFolder;
 
     @Parameter(label = "Data format", style = "listBox", choices = {"HDF5", "Olympus OIF"})
-    private String dataFormat;
+    private String dataFormat = "Olympus OIF";
 
     @Parameter(label = "HDF5 datasets")
-    private String datasetNameString;
+    private String datasetNameString = "/raw/dapi/channel0, /raw/venus/channel0, /raw/mcherry/channel0";
 
     @Parameter(label = "Alignment offsets")
-    private String offsetString;
+    private String offsetString = "0, 0, 0";
 
     @Parameter(label = "Raw dataset prefix (output)")
-    private String rawPrefix;
+    private String rawPrefix = "raw";
 
     @Parameter(label = "Aligned dataset prefix (output)")
-    private String alignedPrefix;
+    private String alignedPrefix = "aligned";
 
     @Parameter(label = "Number of threads", required = false)
     private Integer threads;
 
-    PreProcessing() {
-        dataFormat = "Olympus OIF";
-        datasetNameString = "/raw/dapi/channel0, /raw/venus/channel0, /raw/mcherry/channel0";
-        offsetString = "0, 0, 0";
-        rawPrefix = "raw";
-        alignedPrefix = "aligned";
-    }
 
     @Override
     public void run() {
@@ -211,7 +205,7 @@ class PreProcessing implements Command {
         boolean initialized;
 
         FileNameSet() {
-            sources = new HashMap<>();
+            sources = new LinkedHashMap<>();
             hdf5 = null;
             yml = null;
             initialized = false;
@@ -304,7 +298,7 @@ class PreProcessing implements Command {
         private boolean initialized;
 
         SourceImageSet(FileNameSet names) {
-            images = new HashMap<>();
+            images = new LinkedHashMap<>();
             initialized = openImages(names);
         }
 
@@ -351,7 +345,7 @@ class PreProcessing implements Command {
         private boolean initialized;
 
         MetadataSet(FileNameSet names) {
-            metadata = new HashMap<>();
+            metadata = new LinkedHashMap<>();
             initialized = true;
             names.sources.forEach((k, v) -> {
                 Map<String, Object> meta = readMetadata(v);
@@ -368,7 +362,7 @@ class PreProcessing implements Command {
             if (image == null) {
                 return null;
             }
-            Map<String, Object> meta = new HashMap<>();
+            Map<String, Object> meta = new LinkedHashMap<>();
             try {
                 Format format = formatService.getFormat(image.getPath());
                 Metadata metadata = format.createParser().parse(image);
@@ -380,7 +374,7 @@ class PreProcessing implements Command {
                         key = match.group(2);
                         Map<String, Object> entry;
                         if (! meta.containsKey(group)) {
-                            entry = new HashMap<>();
+                            entry = new LinkedHashMap<>();
                             meta.put(group, entry);
                         } else {
                             try {
@@ -495,8 +489,8 @@ class PreProcessing implements Command {
 
                 for (int d = 0; d < image.numDimensions(); d++) {
                     long dmin, dmax;
-                    if (d == (reference.dimensionIndex(Axes.Z) - 1)) {
-                        dmin = reference.min(d) + zshifts[i] - zsmax;
+                    if ((d == zidx) || ((image.numDimensions() <= zidx) && (d == (zidx - 1)))) {
+                        dmin = reference.min(zidx) + zshifts[i] - zsmax;
                         dmax = dmin + zslices;
                     } else {
                         dmin = reference.min(d);
@@ -509,6 +503,7 @@ class PreProcessing implements Command {
                         imin.stream().mapToLong(l -> l).toArray(),
                         imax.stream().mapToLong(l -> l).toArray());
 
+                logService.log(LogLevel.INFO, "Interval: " + imin + " - " + imax);
                 stack.add(opService.transform().offsetView(image, interval));
             });
 
@@ -584,9 +579,9 @@ class PreProcessing implements Command {
             sources.images.forEach((name, image) -> {
                 ImagePlus imp = convertService.convert(image, ImagePlus.class);
                 if (image.dimension(Axes.CHANNEL) > 1) {
-                    HDF5ImageJ.hdf5write(imp, files.hdf5.getPath(), "/" + rawPrefix + "/" + name + "/channel{c}", "", "%d", 9, false);
+                    HDF5ImageJ.hdf5write(imp, files.hdf5.getPath(), "/" + rawPrefix + "/" + name + "/channel{c}", "", "%d", 0, false);
                 } else {
-                    HDF5ImageJ.hdf5write(imp, files.hdf5.getPath(), "/" + rawPrefix + "/" + name, "", "", 9, false);
+                    HDF5ImageJ.hdf5write(imp, files.hdf5.getPath(), "/" + rawPrefix + "/" + name, "", "", 0, false);
                 }
                 imp.close();
             });
@@ -598,7 +593,7 @@ class PreProcessing implements Command {
             if ((! initialized) || (! processed.initialized)) {
                 return;
             }
-            logService.log(LogLevel.INFO, "Exporting aligned data $files.hdf5.");
+            logService.log(LogLevel.INFO, "Exporting aligned data " + files.hdf5);
             Dataset image = processed.getAlignedImage(offsets);
             if (image != null) {
                 ImagePlus imp = convertService.convert(image, ImagePlus.class);
@@ -620,5 +615,29 @@ class PreProcessing implements Command {
             logService.log(LogLevel.INFO, "Done!");
             return this;
         }
+    }
+
+    public static void main(String... args) {
+        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.INFO);
+
+        final ImageJ ij = new ImageJ();
+        ij.launch(args);
+
+        int received = 0;
+        boolean errors = false;
+
+        while(received < 1 && !errors) {
+            Future future = ij.command().run(PreProcessing.class, true);
+            try {
+                future.get();
+                received++;
+            }
+            catch(Exception e) {
+                errors = true;
+            }
+        }
+
+        System.exit(0);
     }
 }
