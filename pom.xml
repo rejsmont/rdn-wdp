@@ -80,6 +80,7 @@
 		<main-class>eu.hassanlab.rdnwdp.PreProcessing</main-class>
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>ICM</license.copyrightOwners>
+		<enforcer.skip>true</enforcer.skip>
 	</properties>
 
 	<repositories>
