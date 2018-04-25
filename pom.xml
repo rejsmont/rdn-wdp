@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+		http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>19.2.0</version>
+		<relativePath />
+	</parent>
+
+	<groupId>eu.hassanlab</groupId>
+	<artifactId>RDN-WDP</artifactId>
+	<version>0.1.0-SNAPSHOT</version>
+
+	<name>RDN-WDP</name>
+	<description>RDN-WDP Image processing tools</description>
+	<url>http://github.com/rejsmont/rdn-wdp/</url>
+	<inceptionYear>2017</inceptionYear>
+	<organization>
+		<name>Hassan Lab</name>
+		<url>http://www.hassanlab.eu/</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>Simplified BSD License</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>rejsmont</id>
+			<name>Radoslaw Kamil Ejsmont</name>
+			<url>http://radoslaw.ejsmont.net</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>Bassem Hassan</name>
+			<roles><role>founder</role></roles>
+		</contributor>
+	</contributors>
+
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+
+	<scm>
+		<connection>scm:git:git://github.com/rejsmont/rdn-wdp</connection>
+		<developerConnection>scm:git:git@github.com:rejsmont/rdn-wdp</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/rejsmont/rdn-wdp</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/rejsmont/rdn-wdp/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>None</system>
+	</ciManagement>
+
+	<properties>
+		<package-name>eu.hassanlab.rdnwdp</package-name>
+		<main-class>eu.hassanlab.rdnwdp.PreProcessing</main-class>
+		<license.licenseName>bsd_2</license.licenseName>
+		<license.copyrightOwners>ICM</license.copyrightOwners>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-legacy</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>HDF5_Vibez</artifactId>
+			<version>0.2.99-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<groupId>cisd</groupId>
+					<artifactId>jhdf5</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+			<version>1.13</version>
+		</dependency>
+		<dependency>
+			<groupId>io.scif</groupId>
+			<artifactId>scifio</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.scif</groupId>
+			<artifactId>scifio-bf-compat</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-bsd</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-gpl</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+	</dependencies>
+</project>
