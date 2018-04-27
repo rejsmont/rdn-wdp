@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>PreProcessing")
+@Plugin(type = Command.class, menuPath = "Plugins>RDN-WDP>PreProcessing")
 public class PreProcessing implements Command {
 
     @Parameter

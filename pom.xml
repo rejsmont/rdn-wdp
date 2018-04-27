@@ -88,6 +88,10 @@
 			<id>imagej.public</id>
 			<url>http://maven.imagej.net/content/groups/public</url>
 		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
@@ -109,6 +113,11 @@
 					<artifactId>jhdf5</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.github.mcib3d</groupId>
+			<artifactId>mcib3d-core</artifactId>
+			<version>master-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
