@@ -1,5 +1,7 @@
 package eu.hassanlab.rdnwdp;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.measure.ResultsTable;
@@ -11,11 +13,13 @@ import mcib3d.geom.Objects3DPopulation;
 import mcib3d.geom.Voxel3D;
 import mcib3d.image3d.ImageHandler;
 import mcib3d.image3d.ImageInt;
+import net.imagej.ImageJ;
 import org.scijava.command.Command;
 import org.scijava.log.LogLevel;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.slf4j.LoggerFactory;
 import sc.fiji.hdf5.HDF5ImageJ;
 
 import java.io.File;
@@ -24,9 +28,10 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Future;
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>RDN-WDP>PreProcessing")
+@Plugin(type = Command.class, menuPath = "Plugins>RDN-WDP>Quantification")
 public class Quantification implements Command {
 
     @Parameter
@@ -162,5 +167,29 @@ public class Quantification implements Command {
         }
 
         return results;
+    }
+
+    public static void main(String... args) {
+        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.INFO);
+
+        final ImageJ ij = new ImageJ();
+        ij.launch(args);
+
+        int received = 0;
+        boolean errors = false;
+
+        while(received < 1 && !errors) {
+            Future future = ij.command().run(Quantification.class, true);
+            try {
+                future.get();
+                received++;
+            }
+            catch(Exception e) {
+                errors = true;
+            }
+        }
+
+        System.exit(0);
     }
 }
