@@ -116,7 +116,7 @@ public class Plotting implements Command {
             List<Nucleus> nuclei = new ArrayList<>();
             try {
                 Reader in = new FileReader(file);
-                Iterable<CSVRecord> records = CSVFormat.RFC4180.parse(in);
+                Iterable<CSVRecord> records = CSVFormat.RFC4180.withHeader().parse(in);
                 for (CSVRecord record : records) {
                     Nucleus nucleus = new Nucleus(record);
                     nuclei.add(nucleus);
