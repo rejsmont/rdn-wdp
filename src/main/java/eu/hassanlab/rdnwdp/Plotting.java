@@ -42,7 +42,7 @@ public class Plotting implements Command {
     private String referenceDataset = "/aligned/channel0";
 
     @Parameter(label = "Plot Dataset")
-    private String plotDataset = "/plots/nuclei";
+    private String plotDataset = "/plots/nuclei/channel{c}";
 
     @Parameter(label = "Number of threads", required = false)
     private Integer threads;
@@ -104,7 +104,7 @@ public class Plotting implements Command {
             List<Nucleus> nuclei = readCSV();
             ImagePlus plot = plotNuclei(nuclei);
             if (plot != null) {
-                HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, false);
+                HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, "", "%d", 0, false);
                 logService.log(LogLevel.INFO, "Results saved to " + hdf5.getPath());
             } else {
                 logService.log(LogLevel.WARN, "Failed to generate plot for " + file.getPath());
@@ -142,7 +142,6 @@ public class Plotting implements Command {
             ImagePlus[] channelImages = new ImagePlus[nChannels];
 
             for (int k = 0; k < nChannels; k++) {
-                logService.log(LogLevel.INFO, "Processing channel " + k);
                 ObjectCreator3D objectImage =
                         new ObjectCreator3D(reference.getWidth(), reference.getHeight(), reference.getNSlices());
                 for (Nucleus nucleus : nuclei) {
@@ -150,14 +149,9 @@ public class Plotting implements Command {
                         nucleus.getX(), nucleus.getY(),	nucleus.getZ(),
                         nucleus.getR(), nucleus.getR(), nucleus.getR(),
                         nucleus.getF(k), false);
-                    System.out.print("c: " + k + " x: " + nucleus.getX());
-                    System.out.print(" y: " + nucleus.getY() + " z: " + nucleus.getZ());
-                    System.out.print(" r: " + nucleus.getR() + " f: " + nucleus.getF(k));
-                    System.out.println("");
                 }
                 System.out.println("");
                 channelImages[k] = new ImagePlus("Rendering C" + (k + 1), objectImage.getStack());
-                logService.log(LogLevel.INFO, "Done processing channel " + k);
             }
 
             return RGBStackMerge.mergeChannels(channelImages, false);
