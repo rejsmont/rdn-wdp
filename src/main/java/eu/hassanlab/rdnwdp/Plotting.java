@@ -125,6 +125,7 @@ public class Plotting implements Command {
                 in.close();
             } catch (Exception e) {
                 logService.log(LogLevel.WARN, "Failed to read CSV file " + file.getPath());
+                e.printStackTrace();
             };
 
             return nuclei;
