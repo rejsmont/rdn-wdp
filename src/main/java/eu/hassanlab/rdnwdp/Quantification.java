@@ -28,7 +28,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 
 @Plugin(type = Command.class, menuPath = "Plugins>RDN-WDP>Quantification")
@@ -49,6 +49,9 @@ public class Quantification implements Command {
     @Parameter(label = "Quantification Datasets")
     private String quantNameString = "/aligned/channel0, /aligned/channel1, /aligned/channel2";
 
+    @Parameter(label = "Number of threads", required = false)
+    private Integer threads;
+
     @Override
     public void run() {
         List<File> list = new ArrayList<>();
@@ -65,8 +68,39 @@ public class Quantification implements Command {
 
         String[] quantDatasets = quantNameString.replaceAll("\\s","").split(",");
 
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        ExecutorCompletionService<Object> ecs = new ExecutorCompletionService<>(pool);
+
         for (File file : list) {
-            ImagePlus[] channels = Arrays.stream(quantDatasets)
+            ecs.submit(new ImageQuantifier(file, quantDatasets));
+        }
+
+        int submitted = list.size();
+        while (submitted > 0) {
+            try {
+                ecs.take().get();
+            } catch (Exception e) {
+                logService.log(LogLevel.WARN, "One of the quantification threads failed!");
+            }
+            submitted--;
+        }
+
+        pool.shutdown();
+    }
+
+    class ImageQuantifier implements Callable<Object> {
+
+        private File file;
+        private String[] datasets;
+
+        ImageQuantifier(File file, String[] datasets) {
+            this.file = file;
+            this.datasets = datasets;
+        }
+
+        @Override
+        public Object call() {
+            ImagePlus[] channels = Arrays.stream(datasets)
                     .map(dataset -> HDF5ImageJ.hdf5read(file.getPath(), dataset, "zyx"))
                     .toArray(ImagePlus[]::new);
 
@@ -75,6 +109,8 @@ public class Quantification implements Command {
             ResultsTable result = getMeasurements(objects, image);
 
             result.save(file.getPath().replace(".h5", ".csv"));
+
+            return this;
         }
     }
 
