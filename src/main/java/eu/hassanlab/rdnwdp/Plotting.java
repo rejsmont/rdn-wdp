@@ -137,20 +137,20 @@ public class Plotting implements Command {
             final int nChannels = nuclei.get(0).sizeF();
             ImagePlus[] channelImages = new ImagePlus[nChannels];
 
-            for (int i = 0; i < nChannels; i++) {
-                logService.log(LogLevel.INFO, "Processing channel " + i);
+            for (int k = 0; k < nChannels; k++) {
+                logService.log(LogLevel.INFO, "Processing channel " + k);
                 ObjectCreator3D objectImage =
                         new ObjectCreator3D(reference.getWidth(), reference.getHeight(), reference.getNSlices());
                 for (Nucleus nucleus : nuclei) {
                     objectImage.createEllipsoid(
                         nucleus.getX(), nucleus.getY(),	nucleus.getZ(),
                         nucleus.getR(), nucleus.getR(), nucleus.getR(),
-                        nucleus.getF(i), false);
+                        nucleus.getF(k), false);
                     System.out.print(".");
                 }
                 System.out.println("");
-                channelImages[i] = new ImagePlus("Rendering C" + (i + 1), objectImage.getStack());
-                logService.log(LogLevel.INFO, "Done processing channel " + i);
+                channelImages[k] = new ImagePlus("Rendering C" + (k + 1), objectImage.getStack());
+                logService.log(LogLevel.INFO, "Done processing channel " + k);
             }
 
             return RGBStackMerge.mergeChannels(channelImages, false);
