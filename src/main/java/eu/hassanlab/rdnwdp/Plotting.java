@@ -105,8 +105,12 @@ public class Plotting implements Command {
             logService.log(LogLevel.INFO, "Read nuclei from " + file.getPath());
             ImagePlus plot = plotNuclei(nuclei);
             logService.log(LogLevel.INFO, "Saving data... " + file.getPath());
-            HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, false);
-            logService.log(LogLevel.INFO, "Results saved to " + hdf5.getPath());
+            if (plot != null) {
+                HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, false);
+                logService.log(LogLevel.INFO, "Results saved to " + hdf5.getPath());
+            } else {
+                logService.log(LogLevel.WARN, "Failed to generate plot for " + file.getPath());
+            }
 
             return this;
         }
@@ -133,9 +137,14 @@ public class Plotting implements Command {
 
         public ImagePlus plotNuclei(List<Nucleus> nuclei) {
 
-            ImagePlus[] channelImages = new ImagePlus[reference.getNChannels()];
+            if (nuclei.size() == 0) {
+                return null;
+            }
 
-            for (int i = 0; i < reference.getNChannels(); i++) {
+            final int nChannels = nuclei.get(0).sizeF();
+            ImagePlus[] channelImages = new ImagePlus[nChannels];
+
+            for (int i = 0; i < nChannels; i++) {
                 ObjectCreator3D objectImage =
                         new ObjectCreator3D(reference.getWidth(), reference.getHeight(), reference.getNSlices());
                 for (Nucleus nucleus : nuclei) {
