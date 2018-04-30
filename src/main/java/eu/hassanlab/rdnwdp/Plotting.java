@@ -103,7 +103,9 @@ public class Plotting implements Command {
 
             logService.log(LogLevel.INFO, "Processing " + file.getPath());
             List<Nucleus> nuclei = readCSV();
+            logService.log(LogLevel.INFO, "Read nuclei from " + file.getPath());
             ImagePlus plot = plotNuclei(nuclei);
+            logService.log(LogLevel.INFO, "Saving data... " + file.getPath());
             HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, false);
             logService.log(LogLevel.INFO, "Results saved to " + hdf5.getPath());
 
