@@ -65,9 +65,12 @@ public class Plotting implements Command {
         ExecutorCompletionService<Object> ecs = new ExecutorCompletionService<>(pool);
 
         for (File file : list) {
-            ecs.submit(new ImagePlotter(file));
+            ImagePlotter plotter = new ImagePlotter(file);
+            plotter.call();
+            //ecs.submit(new ImagePlotter(file));
         }
 
+        /*
         int submitted = list.size();
         while (submitted > 0) {
             try {
@@ -79,6 +82,7 @@ public class Plotting implements Command {
         }
 
         pool.shutdown();
+        */
     }
 
     class ImagePlotter implements Callable<Object> {
