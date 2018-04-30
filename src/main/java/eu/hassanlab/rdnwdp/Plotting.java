@@ -97,9 +97,11 @@ public class Plotting implements Command {
         @Override
         public Object call() {
 
+            logService.log(LogLevel.INFO, "Processing " + file.getPath());
             List<Nucleus> nuclei = readCSV();
             ImagePlus plot = plotNuclei(nuclei);
             HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, false);
+            logService.log(LogLevel.INFO, "Results saved to " + hdf5.getPath());
 
             return this;
         }
@@ -114,7 +116,9 @@ public class Plotting implements Command {
                     nuclei.add(new Nucleus(record));
                 }
                 in.close();
-            } catch (Exception e) {};
+            } catch (Exception e) {
+                logService.log(LogLevel.WARN, "Failed to read CSV file " + file.getPath());
+            };
 
             return nuclei;
         }
