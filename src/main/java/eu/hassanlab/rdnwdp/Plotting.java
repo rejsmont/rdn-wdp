@@ -150,7 +150,10 @@ public class Plotting implements Command {
                         nucleus.getX(), nucleus.getY(),	nucleus.getZ(),
                         nucleus.getR(), nucleus.getR(), nucleus.getR(),
                         nucleus.getF(k), false);
-                    System.out.print(".");
+                    System.out.print("c: " + k + " x: " + nucleus.getX());
+                    System.out.print(" y: " + nucleus.getY() + " z: " + nucleus.getZ());
+                    System.out.print(" r: " + nucleus.getR() + " f: " + nucleus.getF(k));
+                    System.out.println("");
                 }
                 System.out.println("");
                 channelImages[k] = new ImagePlus("Rendering C" + (k + 1), objectImage.getStack());
