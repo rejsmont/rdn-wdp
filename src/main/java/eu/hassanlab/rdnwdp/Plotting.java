@@ -163,7 +163,7 @@ public class Plotting implements Command {
             y = Math.round(Float.parseFloat(record.get(2)));
             z = Math.round(Float.parseFloat(record.get(3)));
             r = (int) Math.round(Float.parseFloat(record.get(4)) * 0.75 * Math.pow(1 / Math.PI, 1.0 / 3.0));
-
+            f = new ArrayList<>();
             for (int i = 6; i < record.size(); i = i + 2) {
                 f.add(Math.round(Float.parseFloat(record.get(i))));
             }
