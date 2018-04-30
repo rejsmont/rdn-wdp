@@ -42,7 +42,7 @@ public class Plotting implements Command {
     private String referenceDataset = "/aligned/channel0";
 
     @Parameter(label = "Plot Dataset")
-    private String plotDataset = "/plots/nuclei/channel{c}";
+    private String plotDataset = "/plot/nuclei/channel{c}";
 
     @Parameter(label = "Number of threads", required = false)
     private Integer threads;
