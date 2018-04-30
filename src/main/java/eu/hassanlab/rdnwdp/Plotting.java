@@ -3,7 +3,6 @@ package eu.hassanlab.rdnwdp;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.plugin.RGBStackMerge;
 import mcib3d.geom.ObjectCreator3D;
 import net.imagej.ImageJ;
