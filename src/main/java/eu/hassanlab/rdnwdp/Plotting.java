@@ -65,12 +65,9 @@ public class Plotting implements Command {
         ExecutorCompletionService<Object> ecs = new ExecutorCompletionService<>(pool);
 
         for (File file : list) {
-            //ecs.submit(new ImagePlotter(file));
-            ImagePlotter plotter = new ImagePlotter(file);
-            plotter.call();
+            ecs.submit(new ImagePlotter(file));
         }
 
-        /**
         int submitted = list.size();
         while (submitted > 0) {
             try {
@@ -82,7 +79,6 @@ public class Plotting implements Command {
         }
 
         pool.shutdown();
-         **/
     }
 
     class ImagePlotter implements Callable<Object> {
@@ -102,9 +98,7 @@ public class Plotting implements Command {
 
             logService.log(LogLevel.INFO, "Processing " + file.getPath());
             List<Nucleus> nuclei = readCSV();
-            logService.log(LogLevel.INFO, "Read nuclei from " + file.getPath());
             ImagePlus plot = plotNuclei(nuclei);
-            logService.log(LogLevel.INFO, "Saving data... " + file.getPath());
             if (plot != null) {
                 HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, false);
                 logService.log(LogLevel.INFO, "Results saved to " + hdf5.getPath());
@@ -124,7 +118,6 @@ public class Plotting implements Command {
                 for (CSVRecord record : records) {
                     Nucleus nucleus = new Nucleus(record);
                     nuclei.add(nucleus);
-                    logService.log(LogLevel.INFO, "New nucleus " + nucleus);
                 }
                 in.close();
             } catch (Exception e) {
@@ -145,6 +138,7 @@ public class Plotting implements Command {
             ImagePlus[] channelImages = new ImagePlus[nChannels];
 
             for (int i = 0; i < nChannels; i++) {
+                logService.log(LogLevel.INFO, "Processing channel " + i);
                 ObjectCreator3D objectImage =
                         new ObjectCreator3D(reference.getWidth(), reference.getHeight(), reference.getNSlices());
                 for (Nucleus nucleus : nuclei) {
@@ -152,8 +146,11 @@ public class Plotting implements Command {
                         nucleus.getX(), nucleus.getY(),	nucleus.getZ(),
                         nucleus.getR(), nucleus.getR(), nucleus.getR(),
                         nucleus.getF(i), false);
+                    System.out.print(".");
                 }
+                System.out.println("");
                 channelImages[i] = new ImagePlus("Rendering C" + (i + 1), objectImage.getStack());
+                logService.log(LogLevel.INFO, "Done processing channel " + i);
             }
 
             return RGBStackMerge.mergeChannels(channelImages, false);
