@@ -105,10 +105,12 @@ public class Plotting implements Command {
                 HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, "", "%d", 0, false);
                 logService.log(LogLevel.INFO, "Results saved to " + hdf5.getPath());
                 plot.close();
+                plot = null;
             } else {
                 logService.log(LogLevel.WARN, "Failed to generate plot for " + file.getPath());
             }
             reference.close();
+            reference = null;
 
             return this;
         }
@@ -153,7 +155,14 @@ public class Plotting implements Command {
                 channelImages[k] = new ImagePlus("Rendering C" + (k + 1), objectImage.getStack());
             }
 
-            return RGBStackMerge.mergeChannels(channelImages, false);
+            ImagePlus result = RGBStackMerge.mergeChannels(channelImages, false);
+
+            for (int k = 0; k < nChannels; k++) {
+                channelImages[k].close();
+                channelImages[k] = null;
+            }
+
+            return result;
         }
     }
 
