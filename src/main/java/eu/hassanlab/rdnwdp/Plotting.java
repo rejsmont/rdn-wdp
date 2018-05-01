@@ -104,9 +104,11 @@ public class Plotting implements Command {
             if (plot != null) {
                 HDF5ImageJ.hdf5write(plot, hdf5.getPath(), plotDataset, "", "%d", 0, false);
                 logService.log(LogLevel.INFO, "Results saved to " + hdf5.getPath());
+                plot.close();
             } else {
                 logService.log(LogLevel.WARN, "Failed to generate plot for " + file.getPath());
             }
+            reference.close();
 
             return this;
         }
