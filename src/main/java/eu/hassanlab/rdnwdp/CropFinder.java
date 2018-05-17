@@ -138,9 +138,8 @@ public class CropFinder implements Command {
                         max[i] = image.max(i);
                     }
                 }
-
                 Interval interval = new FinalInterval(min, max);
-                logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + Arrays.toString(min)"-" + Arrays.toString(max));
+                logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + Arrays.toString(min) + "-" + Arrays.toString(max));
             }
             imp.close();
         }
