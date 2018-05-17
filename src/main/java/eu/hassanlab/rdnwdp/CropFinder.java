@@ -1,8 +1,13 @@
 package eu.hassanlab.rdnwdp;
 
 import ij.ImagePlus;
+import ij.plugin.Resizer;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
+import net.imagej.axis.Axes;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
+import net.imglib2.util.Intervals;
 import org.scijava.command.Command;
 import org.scijava.command.CommandModule;
 import org.scijava.command.CommandService;
@@ -12,6 +17,7 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.fiji.hdf5.HDF5ImageJ;
+import sc.fiji.hdf5.DataSetInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,6 +111,42 @@ public class CropFinder implements Command {
         }
 
         logService.log(LogLevel.INFO, "The image comes from " + bestFile + " cropped " + bestAlignment);
+
+        if (bestFile == null) {
+            return;
+        }
+
+        ArrayList<DataSetInfo> datasets = HDF5ImageJ.hdf5list(bestFile.getPath());
+
+        ImagePlus refimp =  HDF5ImageJ.hdf5read(bestFile.getPath(), dataset, "zyx");
+        Dataset referenceImage = convertService.convert(refimp, Dataset.class).duplicate();
+        refimp.close();
+
+        for (DataSetInfo dataset : datasets) {
+            ImagePlus imp = HDF5ImageJ.hdf5read(bestFile.getPath(), dataset.getPath(), "zyx");
+            if ((imp.getWidth() == referenceImage.getWidth()) && (imp.getHeight() == referenceImage.getHeight())) {
+                Dataset image = convertService.convert(imp, Dataset.class);
+                long[] min = new long[image.numDimensions()];
+                long[] max = new long[image.numDimensions()];
+
+                for (int i = 0; i < image.numDimensions(); i++) {
+                    if (image.axis(i).type() == Axes.X) {
+                        min[i] = bestAlignment.getX() - 1;
+                        max[i] = min[i] + imp.getWidth();
+                    } else if (image.axis(i).type() == Axes.X) {
+                        min[i] = bestAlignment.getY() - 1;
+                        max[i] = min[i] + imp.getHeight();
+                    } else {
+                        min[i] = image.min(i);
+                        max[i] = image.max(i);
+                    }
+                }
+
+                Interval interval = new FinalInterval(min, max);
+                logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + interval);
+            }
+            imp.close();
+        }
     }
 
     class AlignmentCalculator implements Callable<ShiftCalculator.Alignment> {
