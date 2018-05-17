@@ -52,6 +52,9 @@ public class ShiftCalculator implements Command {
     @Parameter(label = "Sampling (0 = use all slices)")
     private int sampling = 0;
 
+    @Parameter(label = "Strict", required = false)
+    private boolean strict = false;
+
     @Parameter(type = ItemIO.OUTPUT)
     private Alignment result;
 
@@ -76,6 +79,11 @@ public class ShiftCalculator implements Command {
         ImagePlus imp2 = convertService.convert(sample, ImagePlus.class);
 
         int maxslices = imp1.getNSlices();
+
+        if ((strict) && (imp2.getNSlices() != imp1.getNSlices())) {
+            return new Alignment(0,0,0,0);
+        }
+
         if (maxslices > imp2.getNSlices()) {
             maxslices = imp2.getNSlices();
         }

@@ -128,7 +128,7 @@ public class CropFinder implements Command {
         public ShiftCalculator.Alignment call() {
 
             Future future = commandService.run(ShiftCalculator.class, true,
-                    "reference", referenceImage, "input", inputImage, "sampling", 0);
+                    "reference", referenceImage, "input", inputImage, "sampling", 0, "strict", true);
             try {
                 CommandModule result = (CommandModule) future.get();
                 return (ShiftCalculator.Alignment) result.getOutput("result");
