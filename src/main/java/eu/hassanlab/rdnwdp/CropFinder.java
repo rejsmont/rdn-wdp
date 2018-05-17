@@ -4,9 +4,14 @@ import ij.ImagePlus;
 import ij.plugin.Resizer;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
+import net.imagej.DatasetService;
+import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
+import net.imagej.ops.OpService;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Intervals;
 import org.scijava.command.Command;
 import org.scijava.command.CommandModule;
@@ -39,6 +44,12 @@ public class CropFinder implements Command {
 
     @Parameter
     private DatasetIOService ioService;
+
+    @Parameter
+    private DatasetService datasetService;
+
+    @Parameter
+    private OpService opService;
 
     @Parameter(label = "Input file")
     private File inputFile;
@@ -129,10 +140,10 @@ public class CropFinder implements Command {
                 for (int i = 0; i < image.numDimensions(); i++) {
                     if (image.axis(i).type() == Axes.X) {
                         min[i] = bestAlignment.getX() - 1;
-                        max[i] = min[i] + imp.getWidth();
-                    } else if (image.axis(i).type() == Axes.X) {
+                        max[i] = min[i] + inputImage.getWidth();
+                    } else if (image.axis(i).type() == Axes.Y) {
                         min[i] = bestAlignment.getY() - 1;
-                        max[i] = min[i] + imp.getHeight();
+                        max[i] = min[i] + inputImage.getHeight();
                     } else {
                         min[i] = image.min(i);
                         max[i] = image.max(i);
@@ -140,10 +151,30 @@ public class CropFinder implements Command {
                 }
                 Interval interval = new FinalInterval(min, max);
                 logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + Arrays.toString(min) + "-" + Arrays.toString(max));
+                RandomAccessibleInterval rai = opService.transform().crop(image.getImgPlus(), interval);
+                Dataset cropds = datasetService.create(rai);
+                ImagePlus cropimp = convertService.convert(cropds, ImagePlus.class);
+
+                //HDF5ImageJ.hdf5write( cropimp, outputFolder.getPath() + bestFile.getName(), dataset.getPath(), false);
+                logService.log(LogLevel.INFO, "Saving " + dataset.getPath() + " " + cropimp + " to " + outputFolder.getPath() + bestFile.getName());
             }
             imp.close();
         }
     }
+
+    /*
+    public <T> Dataset doCrop(ImgPlus<T> img, Interval interval) {
+        RandomAccessibleInterval<T> rai = opService.transform().crop(img, interval);
+        Dataset ds = datasetService.create(rai);
+        return ds;
+    }
+
+    public <T extends RealType<T>> Dataset doCrop(ImgPlus<T> img, Interval interval) {
+        RandomAccessibleInterval<T> rai = opService.transform().crop(img, interval);
+        Dataset ds = datasetService.create(rai);
+        return ds;
+    }
+    */
 
     class AlignmentCalculator implements Callable<ShiftCalculator.Alignment> {
 
