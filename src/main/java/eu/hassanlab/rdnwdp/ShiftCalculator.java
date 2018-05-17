@@ -75,18 +75,23 @@ public class ShiftCalculator implements Command {
         ImagePlus imp1 = convertService.convert(reference, ImagePlus.class);
         ImagePlus imp2 = convertService.convert(sample, ImagePlus.class);
 
+        int maxslices = imp1.getNSlices();
+        if (maxslices > imp2.getNSlices()) {
+            maxslices = imp2.getNSlices();
+        }
+
         if (sampling == 0)
-            sampling = imp1.getNSlices();
+            sampling = maxslices;
 
         Alignment[] shifts = new Alignment[sampling];
 
         for (int i = 0; i < sampling; i++) {
 
             int slice;
-            if (sampling == imp1.getNSlices()) {
+            if (sampling == maxslices) {
                 slice = i + 1;
             } else {
-                slice = new Random().nextInt(imp1.getNSlices()) + 1;
+                slice = new Random().nextInt(maxslices) + 1;
             }
 
             ImageProcessor ip1 = imp1.getStack().getProcessor((int) Math.ceil(slice));
