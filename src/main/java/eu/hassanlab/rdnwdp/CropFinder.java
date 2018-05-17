@@ -140,10 +140,10 @@ public class CropFinder implements Command {
                 for (int i = 0; i < image.numDimensions(); i++) {
                     if (image.axis(i).type() == Axes.X) {
                         min[i] = bestAlignment.getX() - 1;
-                        max[i] = min[i] + inputImage.getWidth();
+                        max[i] = min[i] + inputImage.getWidth() - 1;
                     } else if (image.axis(i).type() == Axes.Y) {
                         min[i] = bestAlignment.getY() - 1;
-                        max[i] = min[i] + inputImage.getHeight();
+                        max[i] = min[i] + inputImage.getHeight() - 1;
                     } else {
                         min[i] = image.min(i);
                         max[i] = image.max(i);
@@ -155,8 +155,9 @@ public class CropFinder implements Command {
                 Dataset cropds = datasetService.create(rai);
                 ImagePlus cropimp = convertService.convert(cropds, ImagePlus.class);
 
-                //HDF5ImageJ.hdf5write( cropimp, outputFolder.getPath() + bestFile.getName(), dataset.getPath(), false);
-                logService.log(LogLevel.INFO, "Saving " + dataset.getPath() + " " + cropimp + " to " + outputFolder.getPath() + bestFile.getName());
+                logService.log(LogLevel.INFO, "Saving " + dataset.getPath() + " " + cropimp + " to " + outputFolder.getPath() + File.pathSeparator + bestFile.getName());
+                HDF5ImageJ.hdf5write(cropimp, outputFolder.getPath() + File.pathSeparator + bestFile.getName(), dataset.getPath(), false);
+                cropimp.close();
             }
             imp.close();
         }
