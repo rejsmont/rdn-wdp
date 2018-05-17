@@ -22,10 +22,7 @@ import sc.fiji.hdf5.DataSetInfo;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 @Plugin(type = Command.class, menuPath = "Plugins>RDN-WDP>Crop reference")
@@ -143,7 +140,7 @@ public class CropFinder implements Command {
                 }
 
                 Interval interval = new FinalInterval(min, max);
-                logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + interval);
+                logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + Arrays.toString(min)"-" + Arrays.toString(max));
             }
             imp.close();
         }
