@@ -151,6 +151,8 @@ public class CropFinder implements Command {
         datasetMap.put("/training/labels", createDataset(readHDF5(labelFile, dsLabel, "zyxc"), referenceImage));
 
         saveHDF5(datasetMap, outputFolder + File.separator + bestFile.getName());
+
+        pool.shutdown();
     }
 
     private Dataset readHDF5(File file, String dataset, String layout) {
