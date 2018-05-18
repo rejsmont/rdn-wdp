@@ -8,6 +8,7 @@ import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
+import net.imagej.axis.CalibratedAxis;
 import net.imagej.ops.OpService;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
@@ -177,6 +178,16 @@ public class CropFinder implements Command {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private Dataset createDataset(RandomAccessibleInterval rai, Dataset reference) {
+        CalibratedAxis[] axes = new CalibratedAxis[reference.numDimensions()];
+        reference.axes(axes);
+        Dataset result = datasetService.create(rai);
+        result.setAxes(axes);
+
+        return result;
+    }
+
     private Dataset processDataset(File file, DataSetInfo dataset, ShiftCalculator.Alignment alignment, Dataset inputImg, Dataset referenceImg) {
         Dataset img = readHDF5(file, dataset.getPath(), "zyx");
         if ((img.getWidth() == referenceImg.getWidth()) && (img.getHeight() == referenceImg.getHeight())) {
@@ -198,8 +209,10 @@ public class CropFinder implements Command {
             Interval interval = new FinalInterval(min, max);
             logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + Arrays.toString(min) + "-" + Arrays.toString(max));
             RandomAccessibleInterval rai = opService.transform().crop(img.getImgPlus(), interval);
-            return datasetService.create(rai);
+
+            return createDataset(rai, referenceImg);
         }
+
         return null;
     }
 
