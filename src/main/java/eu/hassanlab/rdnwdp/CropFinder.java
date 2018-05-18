@@ -3,6 +3,7 @@ package eu.hassanlab.rdnwdp;
 import ij.ImagePlus;
 import ij.plugin.Resizer;
 import io.scif.services.DatasetIOService;
+import net.imagej.Data;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.ImgPlus;
@@ -61,7 +62,19 @@ public class CropFinder implements Command {
     private String filterString;
 
     @Parameter(label = "Reference dataset")
-    private String dataset;
+    private String dsReference;
+
+    @Parameter(label = "Training dataset")
+    private String dsTrain;
+
+    @Parameter(label = "Mask dataset")
+    private String dsMask;
+
+    @Parameter(label = "Label file")
+    private File labelFile;
+
+    @Parameter(label = "Label dataset")
+    private String dsLabel;
 
     @Parameter(label = "Output folder", style = "directory")
     private File outputFolder;
@@ -94,7 +107,7 @@ public class CropFinder implements Command {
         ExecutorService pool = Executors.newFixedThreadPool(threads);
 
         for (File referenceFile : list) {
-            AlignmentCalculator calculator = new AlignmentCalculator(inputImage, referenceFile, dataset);
+            AlignmentCalculator calculator = new AlignmentCalculator(inputImage, referenceFile, dsReference);
             futures.put(referenceFile, pool.submit(calculator));
         }
 
@@ -126,56 +139,69 @@ public class CropFinder implements Command {
 
         ArrayList<DataSetInfo> datasets = HDF5ImageJ.hdf5list(bestFile.getPath());
 
-        ImagePlus refimp =  HDF5ImageJ.hdf5read(bestFile.getPath(), dataset, "zyx");
-        Dataset referenceImage = convertService.convert(refimp, Dataset.class).duplicate();
-        refimp.close();
+        Dataset referenceImage = readHDF5(bestFile, dsReference, "zyx");
+        Map<String, Dataset> datasetMap = new HashMap<>();
 
         for (DataSetInfo dataset : datasets) {
-            ImagePlus imp = HDF5ImageJ.hdf5read(bestFile.getPath(), dataset.getPath(), "zyx");
-            if ((imp.getWidth() == referenceImage.getWidth()) && (imp.getHeight() == referenceImage.getHeight())) {
-                Dataset image = convertService.convert(imp, Dataset.class);
-                long[] min = new long[image.numDimensions()];
-                long[] max = new long[image.numDimensions()];
-
-                for (int i = 0; i < image.numDimensions(); i++) {
-                    if (image.axis(i).type() == Axes.X) {
-                        min[i] = bestAlignment.getX() - 1;
-                        max[i] = min[i] + inputImage.getWidth() - 1;
-                    } else if (image.axis(i).type() == Axes.Y) {
-                        min[i] = bestAlignment.getY() - 1;
-                        max[i] = min[i] + inputImage.getHeight() - 1;
-                    } else {
-                        min[i] = image.min(i);
-                        max[i] = image.max(i);
-                    }
-                }
-                Interval interval = new FinalInterval(min, max);
-                logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + Arrays.toString(min) + "-" + Arrays.toString(max));
-                RandomAccessibleInterval rai = opService.transform().crop(image.getImgPlus(), interval);
-                Dataset cropds = datasetService.create(rai);
-                ImagePlus cropimp = convertService.convert(cropds, ImagePlus.class);
-
-                logService.log(LogLevel.INFO, "Saving " + dataset.getPath() + " " + cropimp + " to " + outputFolder.getPath() + File.pathSeparator + bestFile.getName());
-                HDF5ImageJ.hdf5write(cropimp, outputFolder.getPath() + File.pathSeparator + bestFile.getName(), dataset.getPath(), false);
-                cropimp.close();
+            if (dataset.getPath().equals(dsTrain)) {
+                datasetMap.put("/training/reference", processDataset(bestFile, dataset, bestAlignment, inputImage, referenceImage));
+            } else if (dataset.getPath().equals(dsMask)) {
+                datasetMap.put("/training/data", processDataset(bestFile, dataset, bestAlignment, inputImage, referenceImage));
             }
-            imp.close();
+        }
+
+        datasetMap.put("/training/labels", readHDF5(labelFile, dsLabel, "zyxc"));
+
+        saveHDF5(datasetMap, outputFolder + File.separator + bestFile.getName());
+    }
+
+    private Dataset readHDF5(File file, String dataset, String layout) {
+        ImagePlus imp =  HDF5ImageJ.hdf5read(file.getPath(), dataset, "zyx");
+        Dataset ds = convertService.convert(imp, Dataset.class).duplicate();
+        imp.close();
+        return ds;
+    }
+
+    private void saveHDF5(Dataset img, String path, String dataset) {
+        ImagePlus imp = convertService.convert(img.duplicate(), ImagePlus.class);
+        logService.log(LogLevel.INFO, "Saving " + dataset + img + " to " + path);
+        HDF5ImageJ.hdf5write(imp, path, dataset, false);
+        imp.close();
+    }
+
+    private void saveHDF5(Map<String, Dataset> datasets, String path) {
+        for (Map.Entry<String, Dataset> entry : datasets.entrySet()) {
+            if (entry.getValue() != null) {
+                saveHDF5(entry.getValue(), path, entry.getKey());
+            }
         }
     }
 
-    /*
-    public <T> Dataset doCrop(ImgPlus<T> img, Interval interval) {
-        RandomAccessibleInterval<T> rai = opService.transform().crop(img, interval);
-        Dataset ds = datasetService.create(rai);
-        return ds;
-    }
+    private Dataset processDataset(File file, DataSetInfo dataset, ShiftCalculator.Alignment alignment, Dataset inputImg, Dataset referenceImg) {
+        Dataset img = readHDF5(file, dataset.getPath(), "zyx");
+        if ((img.getWidth() == referenceImg.getWidth()) && (img.getHeight() == referenceImg.getHeight())) {
+            long[] min = new long[img.numDimensions()];
+            long[] max = new long[img.numDimensions()];
 
-    public <T extends RealType<T>> Dataset doCrop(ImgPlus<T> img, Interval interval) {
-        RandomAccessibleInterval<T> rai = opService.transform().crop(img, interval);
-        Dataset ds = datasetService.create(rai);
-        return ds;
+            for (int i = 0; i < img.numDimensions(); i++) {
+                if (img.axis(i).type() == Axes.X) {
+                    min[i] = alignment.getX() - 1;
+                    max[i] = min[i] + inputImg.getWidth() - 1;
+                } else if (img.axis(i).type() == Axes.Y) {
+                    min[i] = alignment.getY() - 1;
+                    max[i] = min[i] + inputImg.getHeight() - 1;
+                } else {
+                    min[i] = img.min(i);
+                    max[i] = img.max(i);
+                }
+            }
+            Interval interval = new FinalInterval(min, max);
+            logService.log(LogLevel.INFO, "Cropping " + dataset.getPath() + " to " + Arrays.toString(min) + "-" + Arrays.toString(max));
+            RandomAccessibleInterval rai = opService.transform().crop(img.getImgPlus(), interval);
+            return datasetService.create(rai);
+        }
+        return null;
     }
-    */
 
     class AlignmentCalculator implements Callable<ShiftCalculator.Alignment> {
 
