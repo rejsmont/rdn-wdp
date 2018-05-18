@@ -103,7 +103,7 @@ public class CropFinder implements Command {
         ExecutorService pool = Executors.newFixedThreadPool(threads);
 
         for (File referenceFile : list) {
-            AlignmentCalculator calculator = new AlignmentCalculator(inputImage, referenceFile, dsReference);
+            AlignmentCalculator calculator = new AlignmentCalculator(inputImage, referenceFile, dsTrain);
             futures.put(referenceFile, pool.submit(calculator));
         }
 
