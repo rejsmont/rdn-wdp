@@ -1,20 +1,15 @@
 package eu.hassanlab.rdnwdp;
 
 import ij.ImagePlus;
-import ij.plugin.Resizer;
 import io.scif.services.DatasetIOService;
-import net.imagej.Data;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
-import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.ops.OpService;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.util.Intervals;
 import org.scijava.command.Command;
 import org.scijava.command.CommandModule;
 import org.scijava.command.CommandService;
@@ -157,7 +152,7 @@ public class CropFinder implements Command {
     }
 
     private Dataset readHDF5(File file, String dataset, String layout) {
-        ImagePlus imp =  HDF5ImageJ.hdf5read(file.getPath(), dataset, "zyx");
+        ImagePlus imp =  HDF5ImageJ.hdf5read(file.getPath(), dataset, layout);
         Dataset ds = convertService.convert(imp, Dataset.class).duplicate();
         imp.close();
         return ds;
@@ -221,12 +216,12 @@ public class CropFinder implements Command {
         private Dataset inputImage;
         private Dataset referenceImage;
 
-        public AlignmentCalculator(Dataset inputImage, Dataset referenceImage) {
+        AlignmentCalculator(Dataset inputImage, Dataset referenceImage) {
             this.inputImage = inputImage;
             this.referenceImage = referenceImage;
         }
 
-        public AlignmentCalculator(Dataset inputImage, File referenceFile, String referenceDataset) {
+        AlignmentCalculator(Dataset inputImage, File referenceFile, String referenceDataset) {
             this.inputImage = inputImage;
             ImagePlus imp =  HDF5ImageJ.hdf5read(referenceFile.getPath(), referenceDataset, "zyx");
             this.referenceImage = convertService.convert(imp, Dataset.class).duplicate();
