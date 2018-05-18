@@ -135,18 +135,20 @@ public class CropFinder implements Command {
 
         ArrayList<DataSetInfo> datasets = HDF5ImageJ.hdf5list(bestFile.getPath());
 
-        Dataset referenceImage = readHDF5(bestFile, dsReference, "zyx");
+        Dataset referenceImage = readHDF5(bestFile, dsTrain, "zyx");
         Map<String, Dataset> datasetMap = new HashMap<>();
 
         for (DataSetInfo dataset : datasets) {
-            if (dataset.getPath().equals(dsTrain)) {
+            if (dataset.getPath().equals(dsReference)) {
                 datasetMap.put("/training/reference", processDataset(bestFile, dataset, bestAlignment, inputImage, referenceImage));
             } else if (dataset.getPath().equals(dsMask)) {
+                datasetMap.put("/training/mask", processDataset(bestFile, dataset, bestAlignment, inputImage, referenceImage));
+            } else if (dataset.getPath().equals(dsTrain)) {
                 datasetMap.put("/training/data", processDataset(bestFile, dataset, bestAlignment, inputImage, referenceImage));
             }
         }
 
-        datasetMap.put("/training/labels", readHDF5(labelFile, dsLabel, "zyxc"));
+        datasetMap.put("/training/labels", createDataset(readHDF5(labelFile, dsLabel, "zyxc"), referenceImage));
 
         saveHDF5(datasetMap, outputFolder + File.separator + bestFile.getName());
     }
