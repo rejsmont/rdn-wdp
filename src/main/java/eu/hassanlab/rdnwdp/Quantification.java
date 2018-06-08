@@ -49,7 +49,7 @@ public class Quantification implements Command {
     @Parameter(label = "Quantification Datasets")
     private String quantNameString = "/aligned/channel0, /aligned/channel1, /aligned/channel2";
 
-    @Parameter(label = "Number of threads", required = false)
+    @Parameter(label = "Number of threads")
     private Integer threads;
 
     @Override
@@ -81,6 +81,7 @@ public class Quantification implements Command {
                 ecs.take().get();
             } catch (Exception e) {
                 logService.log(LogLevel.WARN, "One of the quantification threads failed!");
+                e.printStackTrace();
             }
             submitted--;
         }
