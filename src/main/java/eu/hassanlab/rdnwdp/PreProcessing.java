@@ -128,6 +128,7 @@ public class PreProcessing implements Command {
                 ecs.take().get();
             } catch (Exception e) {
                 logService.log(LogLevel.WARN, "One of processing threads failed!");
+                logService.log(LogLevel.ERROR, e.toString());
             }
             submitted--;
         }
