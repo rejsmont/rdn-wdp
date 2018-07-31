@@ -230,11 +230,12 @@ public class PreProcessing implements Command {
         private void findFiles(File dapi, List<File> fileList, String baseDir) {
             File venus = new File(dapi.getPath().replace("DAPI", "Venus"));
             File mcherry = new File(dapi.getPath().replace("DAPI", "mCherry"));
-            Pattern pattern = Pattern.compile("^.*?(\\d+)\\s*[-_]?\\s*?[Dd]is[ck]\\s*[-_]?\\s*(\\d+).*$");
+            //Pattern pattern = Pattern.compile("^.*?(\\d+)\\s*[-_]?\\s*?[Dd]is[ck]\\s*[-_]?\\s*(\\d+).*$");
+            Pattern pattern = Pattern.compile("^.*?(\\d+_?(\\w*?))?\\s*[-_]?\\s*?[Dd]is[ck]\\s*[-_]?\\s*(\\d+\\w?).*$");
             Matcher match = pattern.matcher(dapi.getPath());
             if (match.find()) {
                 String sample = match.group(1);
-                String disc = match.group(2);
+                String disc = match.group(3);
 
                 String venusPath = venus.getPath();
                 if (fileList.stream().noneMatch(x -> x.getPath().equals(venusPath))) {
