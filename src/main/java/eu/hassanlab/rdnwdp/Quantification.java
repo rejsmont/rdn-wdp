@@ -44,10 +44,10 @@ public class Quantification implements Command {
     private File outputFolder;
 
     @Parameter(label = "Labeling Dataset")
-    private String labelDataset = "/watershed/objects";
+    private String labelDataset = "/segmentation/objects";
 
     @Parameter(label = "Quantification Datasets")
-    private String quantNameString = "/aligned/channel0, /aligned/channel1, /aligned/channel2";
+    private String quantNameString = "/scaled/DAPI, /scaled/mCherry, /scaled/Venus";
 
     @Parameter(label = "Number of threads")
     private Integer threads;
