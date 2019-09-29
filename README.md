@@ -14,7 +14,7 @@ are quite large (>1TB).
 
 ### Dependencies
 Dependencies for plugins can be obtained via Maven. For the Jython scripts used for classifier training
-and the segmentation, please make sure that your Fiji installation is current (ImageJ2 is requires)
+and the segmentation, please make sure that your Fiji installation is current (ImageJ2 is required)
 and includes the following plugins, at minimum:
 
 * Jython scripting (usually included by default)
