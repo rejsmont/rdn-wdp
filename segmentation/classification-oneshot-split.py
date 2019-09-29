@@ -1,6 +1,11 @@
 # @File(label="Classifier to use") classifier
 # @File(label="Image to classify") imagefile
 # @String(label="Dataset to open", default="") dataset
+# @Integer(label="Number of horizontal fragments") hsplit
+# @Integer(label="Number of vertical fragments") vsplit
+# @Integer(label="Fragment overlap") overlap
+
+
 
 # @IOService io
 # @OpService ops
@@ -108,7 +113,7 @@ def classify_image(weka, weka_params, imagefile, dataset = None):
         print "Classifying image..."
         start = time.time()
         (min_sigma, max_sigma, features) = weka_params
-        pmap = compute_split(apply_classifier, 2, 2, 32, imp, (weka, min_sigma, max_sigma, features))
+        pmap = compute_split(apply_classifier, hsplit, vsplit, overlap, imp, (weka, min_sigma, max_sigma, features))
         pmap.setDimensions(weka.getNumOfClasses(), imp.getNSlices(), imp.getNFrames())
         pmap.setOpenAsHyperStack(True)
         pmap.copyScale(imp)
