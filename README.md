@@ -62,11 +62,11 @@ the available parameters are (see source code for details):
 * `inputdir` - directory containing `_Label.h5` files from Ilastik and the corresponding `.tiff` images.
 * `classifier` - path and filename where to save the classifier
 * `featurestr` - the list of features to compute
-* `smin` - Minimum feature radius
-* `smax` - Maximum feature radius
+* `smin` - minimum feature radius
+* `smax` - maximum feature radius
 
-### Image segmentation
-The classification is done using the [classification-oneshot-split.py.py](segmentation/classification-oneshot-split.py)
+### Pixel classification
+The classification is done using the [classification-oneshot-split.py](segmentation/classification-oneshot-split.py)
 Jython script. Please beware that training is extremely computationally intensive. You should run
 this on a compute node with a lot of cores (we used a 28 core processor) and large
 (>64GB, best 128GB or even 256GB) amount of RAM. The RAM can be traded for compute time using
@@ -76,15 +76,35 @@ split processing. Processing a single image using our setup took ~10-20'.
 
 the available parameters are (see source code for details):
 
-* `classifier` - path and filename where to save the classifier
+* `classifier` - path and filename of the classifier
 * `imagefile` - the HDF image file containing preprocessed data
 * `dataset` - the dataset to segment
-* `hsplit` - How many horizontal tiles should the image be divided into to save RAM
-* `vsplit` - How many vertical tiles should the image be divided into to save RAM
-* `overlap` - Overlap between tiles (in pixels)
+* `hsplit` - how many horizontal tiles should the image be divided into to save RAM
+* `vsplit` - how many vertical tiles should the image be divided into to save RAM
+* `overlap` - overlap between tiles (in pixels)
 
-### Generating point clouds
-Nuclear point clouds are generated using the [Quantification](src/main/java/eu/hassanlab/rdnwdp/Quantification.java) fiji plugin.
+### Image segmentation and quantification
+The classification is done using the [dog-segment-pmap.py](segmentation/dog-segment-pmap.py)
+Jython script. This script also generates the point cloud CSV file.
+Please beware that this step is quite computationally expensive.
+
+`fiji --ij2 --headless --run dog-segment-pmap.py 'inputfile="value",outputfile="value"'`
+
+the available parameters are (see source code for details):
+
+* `inputfile` - input HDF5 file
+* `outputfile` - the output HDF5 file (can be the same as input)
+* `dsegm` - dataset to segment (usually the probability map dataset)
+* `dmeas` - datasets containing signals to quantify
+* `sigma` - high sigma of the DoG filter
+* `div` - DoG sigma ratio
+* `radius` - radius of the local maxima filter
+* `thresh` - probability threshold for watershed mask
+* `cutoff` - local maxima cutoff value
+
+### Generating point clouds (standalone)
+Nuclear point clouds can also be generated from pre-segmented images using the
+[Quantification](src/main/java/eu/hassanlab/rdnwdp/Quantification.java) fiji plugin.
 The plugin can be run from Fiji Menu `Plugins>RDN-WDP>Quantification` after installation or from the command line:
 
 `fiji --ij2 --headless --run Quantification 'inputFolder="value",outputFolder="value"'`
